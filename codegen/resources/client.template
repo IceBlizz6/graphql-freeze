@@ -1,0 +1,133 @@
+// This is your starter template
+// it will not be overwritten
+// You should update it to fit the needs of your project
+
+import { SchemaCodec } from "./codec"
+import { ObjectSchema, InputObjectSchema, createScalars } from "./schema"
+import { Exact, ObjectRequest, scalar, OutputObjectType, InputObjectType, decodeObjectResponse } from "__RUNTIME_PACKAGE__"
+import { EncodedRequest, encodeRequest } from "__RUNTIME_PACKAGE__/request-encoder"
+import { ExecutionResult } from "graphql"
+import { createClient } from "graphql-ws"
+
+const appScalars = createScalars({
+    ID: scalar<string, string>({
+		decode: input => input,
+		encode: input => input
+	}),
+	Int: scalar<number, number>({
+		decode: input => input,
+		encode: input => input
+	}),
+	String: scalar<string, string>({
+		decode: input => input,
+		encode: input => input
+	}),
+	Boolean: scalar<boolean, boolean>({
+		decode: input => input,
+		encode: input => input
+	}),
+	Float: scalar<number, number>({
+		decode: input => input,
+		encode: input => input
+	}),
+})
+
+const codec = new SchemaCodec(appScalars)
+
+export function qSelect<TKey extends keyof ObjectSchema, TSelect>(
+	type: TKey,
+	input: Exact<TSelect, ObjectRequest<ObjectSchema, InputObjectSchema, typeof appScalars, ObjectSchema[TKey]>>
+): TSelect {
+	return input as TSelect
+}
+
+export type OutputType<TKey extends keyof ObjectSchema, TRequest> = OutputObjectType<ObjectSchema, typeof appScalars, TRequest, ObjectSchema[TKey]>
+
+export type RequestType<TKey extends keyof ObjectSchema> = ObjectRequest<ObjectSchema, InputObjectSchema, typeof appScalars, ObjectSchema[TKey]>
+
+export type InputType<TKey extends keyof InputObjectSchema> = InputObjectType<InputObjectSchema, typeof appScalars, InputObjectSchema[TKey]>
+
+async function sendRequest(request: EncodedRequest): Promise<ExecutionResult> {
+	const response = await fetch(
+		"/graphql",
+		{
+			method: "POST",
+			body: JSON.stringify(request)
+		}
+	)
+	if (response.ok) {
+		const result = await response.json()
+		return result as ExecutionResult
+	} else {
+		throw new Error(`Error ${response.status}: ${response.statusText}`)
+	}
+}
+
+export async function query<T>(request: Exact<T, RequestType<"Query">>): Promise<OutputType<"Query", T>> {
+	const encodedRequest = encodeRequest("query", request, codec.Query)
+	const response = await sendRequest(encodedRequest)
+	if (response.data === undefined) {
+		throw new Error("No data in response")
+	} else {
+		const decodedResponse = decodeObjectResponse(response, codec.Query)
+		return decodedResponse as OutputType<"Query", T>
+	}
+}
+
+export async function queryAs<T, S>(
+	request: Exact<T, RequestType<"Query">>,
+	map: (_: OutputType<"Query", T>) => S
+): Promise<S> {
+	const decodedResponse = await query(request)
+	return map(decodedResponse)
+}
+
+export async function mutation<T>(request: Exact<T, RequestType<"Mutation">>): Promise<OutputType<"Mutation", T>> {
+	const encodedRequest = encodeRequest("mutation", request, codec.Mutation)
+	const response = await sendRequest(encodedRequest)
+	if (response.data === undefined) {
+		throw new Error("No data in response")
+	} else {
+		const decodedResponse = decodeObjectResponse(response, codec.Mutation)
+		return decodedResponse as OutputType<"Mutation", T>
+	}
+}
+
+export async function mutationAs<T, S>(
+	request: Exact<T, RequestType<"Mutation">>,
+	map: (_: OutputType<"Mutation", T>) => S
+): Promise<S> {
+	const decodedResponse = await mutation(request)
+	return map(decodedResponse)
+}
+
+export async function subscription<T>(
+	request: Exact<T, RequestType<"Subscription">>,
+	onReceived: (_: OutputType<"Subscription", T>) => void
+): Promise<void> {
+	const client = createClient({
+		url: "/graphql-subscription",
+		webSocketImpl: WebSocket
+	})
+	const encodedRequest = encodeRequest("subscription", request, codec.Subscription)
+	const listener = client.iterate({
+		query: encodedRequest.query,
+		variables: encodedRequest.variables
+	})
+	for await (const received of listener) {
+		if (received.data === undefined || received.data === null) {
+			throw new Error("No data in response")
+		} else {
+			const decodedData = decodeObjectResponse(received.data, codec.Subscription)
+			onReceived(decodedData as OutputType<"Subscription", T>)
+		}
+	}
+}
+
+export async function subscriptionAs<T, S>(
+	request: Exact<T, RequestType<"Subscription">>,
+	map: (_: OutputType<"Subscription", T>) => S,
+	onReceived: (_: S) => void
+): Promise<void> {
+	subscription(request, (response) => onReceived(map(response)))
+}
