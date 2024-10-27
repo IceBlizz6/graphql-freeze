@@ -106,7 +106,8 @@ jobs:
         with:
           tag_name: v${{ env.VERSION }}
           release_name: "Codegen binaries v${{ env.VERSION }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
