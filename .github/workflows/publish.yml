@@ -60,7 +60,7 @@ jobs:
           override: true
 
       - name: Build
-        working-directory: codegen
+        working-directory: "./codegen"
         uses: actions-rs/cargo@v1
         with:
           command: build
