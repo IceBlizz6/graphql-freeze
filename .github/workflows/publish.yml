@@ -103,7 +103,7 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          name: "Codegen binaries v${{ env.VERSION }}"
-          tag: "v${{ env.VERSION }}"
+          name: "Codegen binaries v0.0.1"
+          tag: "v0.0.1"
           artifacts: ./binaries/*
           token: ${{ secrets.GITHUB_TOKEN }}
