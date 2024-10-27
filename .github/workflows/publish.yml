@@ -78,3 +78,21 @@ jobs:
         with:
           name: ${{ matrix.build.NAME }}
           path: codegen/target/${{ matrix.build.TARGET }}/release/${{ matrix.build.BINARY_NAME }}
+
+  publish-codegen-binaries:
+    name: Publish codegen binaries
+    runs-on: ubuntu-latest
+    needs: build-codegen-binaries
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download binaries
+        uses: actions/download-artifact@v3
+        with:
+          path: ./binaries
+
+      - name: Display downloaded binaries
+        run: |
+          echo "Listing downloaded binaries:"
+          ls -R ./binaries
