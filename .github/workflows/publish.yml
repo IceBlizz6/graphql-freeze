@@ -75,13 +75,13 @@ jobs:
 
       - name: Rename binary
         run: |
-          mv "codegen/target/${{ matrix.build.TARGET }}/release/${{ matrix.build.BINARY_NAME }}" ./${{ matrix.build.NAME }}
+          mv "codegen/target/${{ matrix.build.TARGET }}/release/${{ matrix.build.BINARY_NAME }}" ./${{ matrix.build.TARGET }}
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.build.NAME }}
-          path: ${{ matrix.build.NAME }}
+          path: ${{ matrix.build.TARGET }}
           if-no-files-found: error
 
   publish-codegen-binaries:
