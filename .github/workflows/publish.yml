@@ -17,36 +17,42 @@ jobs:
               OS: ubuntu-20.04,
               TOOLCHAIN: stable,
               TARGET: x86_64-unknown-linux-gnu,
+              BINARY_NAME: graphql-freeze-codegen,
             }
           - {
               NAME: linux-arm64-glibc,
               OS: ubuntu-20.04,
               TOOLCHAIN: stable,
               TARGET: aarch64-unknown-linux-gnu,
+              BINARY_NAME: graphql-freeze-codegen,
             }
           - {
               NAME: win32-x64-msvc,
               OS: windows-2022,
               TOOLCHAIN: stable,
               TARGET: x86_64-pc-windows-msvc,
+              BINARY_NAME: graphql-freeze-codegen.exe,
             }
           - {
               NAME: win32-arm64-msvc,
               OS: windows-2022,
               TOOLCHAIN: stable,
               TARGET: aarch64-pc-windows-msvc,
+              BINARY_NAME: graphql-freeze-codegen.exe,
             }
           - {
               NAME: darwin-x64,
               OS: macos-11,
               TOOLCHAIN: stable,
               TARGET: x86_64-apple-darwin,
+              BINARY_NAME: graphql-freeze-codegen,
             }
           - {
               NAME: darwin-arm64,
               OS: macos-11,
               TOOLCHAIN: stable,
               TARGET: aarch64-apple-darwin,
+              BINARY_NAME: graphql-freeze-codegen,
             }
     steps:
       - name: Checkout
@@ -66,3 +72,9 @@ jobs:
           directory: codegen
           args: --release --target ${{ matrix.build.TARGET }}
           use-cross: ${{ matrix.build.OS == 'ubuntu-20.04' }} # use `cross` for Linux builds
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.build.NAME }}
+          path: codegen/target/${{ matrix.build.TARGET }}/release/{{ matrix.build.BINARY_NAME }}
