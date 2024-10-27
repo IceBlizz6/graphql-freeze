@@ -78,6 +78,7 @@ jobs:
         with:
           name: ${{ matrix.build.NAME }}
           path: codegen/target/${{ matrix.build.TARGET }}/release/${{ matrix.build.BINARY_NAME }}
+          if-no-files-found: error
 
   publish-codegen-binaries:
     name: Publish codegen binaries
