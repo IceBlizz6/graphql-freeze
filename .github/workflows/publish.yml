@@ -60,9 +60,9 @@ jobs:
           override: true
 
       - name: Build
-        uses: actions-rs/cargo@v1
+        uses: ClementTsang/cargo-action@v0.0.3
         with:
           command: build
-          working-directory: ./codegen
+          directory: codegen
           args: --release --target ${{ matrix.build.TARGET }}
           use-cross: ${{ matrix.build.OS == 'ubuntu-20.04' }} # use `cross` for Linux builds
