@@ -1,13 +1,13 @@
 # Based on https://github.com/ArnavK-09/rust_cli_for_npx/blob/main/.github/workflows/publish.yml
 
-name: Build codegen release binaries
+name: Publish codegen binaries
 
 on:
   workflow_dispatch:
 
 jobs:
-  publish-codegen-binaries:
-    name: Publish codegen binaries
+  build-codegen-binaries:
+    name: Build codegen binaries
     runs-on: ${{ matrix.build.os }}
     strategy:
       matrix:
@@ -72,6 +72,11 @@ jobs:
           directory: codegen
           args: --release --target ${{ matrix.build.TARGET }}
           use-cross: ${{ matrix.build.OS == 'ubuntu-20.04' }} # use `cross` for Linux builds
+
+      - name: List output files
+        run: |
+          echo "Listing built binaries:"
+          ls -R codegen/target/
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
