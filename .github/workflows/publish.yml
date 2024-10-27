@@ -1,0 +1,67 @@
+# Based on https://github.com/ArnavK-09/rust_cli_for_npx/blob/main/.github/workflows/publish.yml
+
+name: Build codegen release binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-codegen-binaries:
+    name: Publish codegen binaries
+    runs-on: ${{ matrix.build.os }}
+    strategy:
+      matrix:
+        build:
+          - {
+              NAME: linux-x64-glibc,
+              OS: ubuntu-20.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-gnu,
+            }
+          - {
+              NAME: linux-arm64-glibc,
+              OS: ubuntu-20.04,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-gnu,
+            }
+          - {
+              NAME: win32-x64-msvc,
+              OS: windows-2022,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-pc-windows-msvc,
+            }
+          - {
+              NAME: win32-arm64-msvc,
+              OS: windows-2022,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-pc-windows-msvc,
+            }
+          - {
+              NAME: darwin-x64,
+              OS: macos-11,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-apple-darwin,
+            }
+          - {
+              NAME: darwin-arm64,
+              OS: macos-11,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-apple-darwin,
+            }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.build.TOOLCHAIN }}
+          target: ${{ matrix.build.TARGET }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.build.TARGET }}
+          use-cross: ${{ matrix.build.OS == 'ubuntu-20.04' }} # use `cross` for Linux builds
