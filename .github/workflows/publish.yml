@@ -99,3 +99,17 @@ jobs:
         with:
           path: ./binaries
 
+      - name: Create release
+        id: binary_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: "Codegen binaries v${{ env.VERSION }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./binaries/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
