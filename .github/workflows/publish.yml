@@ -109,5 +109,5 @@ jobs:
         with:
           name: "Codegen binaries v${{ env.VERSION }}"
           tag: "v${{ env.VERSION }}"
-          artifacts: ./binaries/**
+          artifacts: ./binaries/**/*
           token: ${{ secrets.GITHUB_TOKEN }}
