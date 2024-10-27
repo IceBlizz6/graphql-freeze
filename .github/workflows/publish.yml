@@ -73,11 +73,6 @@ jobs:
           args: --release --target ${{ matrix.build.TARGET }}
           use-cross: ${{ matrix.build.OS == 'ubuntu-20.04' }} # use `cross` for Linux builds
 
-      - name: List output files
-        run: |
-          echo "Listing built binaries:"
-          ls -R codegen/target/
-
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
