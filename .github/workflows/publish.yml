@@ -90,7 +90,3 @@ jobs:
         with:
           path: ./binaries
 
-      - name: Display downloaded binaries
-        run: |
-          echo "Listing downloaded binaries:"
-          ls -R ./binaries
