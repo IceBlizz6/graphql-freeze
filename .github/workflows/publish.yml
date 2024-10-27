@@ -82,4 +82,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.build.NAME }}
-          path: codegen/target/${{ matrix.build.TARGET }}/release/{{ matrix.build.BINARY_NAME }}
+          path: codegen/target/${{ matrix.build.TARGET }}/release/${{ matrix.build.BINARY_NAME }}
