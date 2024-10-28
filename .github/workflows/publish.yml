@@ -94,13 +94,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract version
-        id: extract_version
-        working-directory: codegen
-        run: |
-          VERSION=$(grep '^version' Cargo.toml | head -1 | awk -F ' ' '{print $3}' | tr -d '"')
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-
       - name: Download binaries
         uses: actions/download-artifact@v4
         with:
@@ -109,7 +102,5 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          name: "graphql-freeze v${{ env.VERSION }}"
-          tag: "v${{ env.VERSION }}"
           artifacts: ./binaries/**
           token: ${{ secrets.GITHUB_TOKEN }}
