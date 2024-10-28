@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use async_std::fs::File;
 use async_std::io::ReadExt;
 use clap::Parser;
-use hyper::body::HttpBody;
 use serde::{Deserialize, Serialize};
 use crate::schema::GqlDocument;
 use crate::code_writer::CodeFileOptions;
@@ -18,15 +17,15 @@ mod schema_introspection;
 #[async_std::main]
 async fn main() {
     let args = Cli::parse();
-    
+
     let mut file = std::fs::File::open(args.config).unwrap();
     let mut config_content = String::new();
     file.read_to_string(&mut config_content).unwrap();
-    
+
     let deserializer = &mut serde_json::Deserializer::from_str(&config_content);
     let config: CodegenJsonConfig = serde_path_to_error::deserialize(deserializer).unwrap();
     let profile = config.profiles.get(&args.profile);
-    
+
     let (fetch, process): (FetchMethod, ProcessMethod) = match profile {
         Some(profile) => {
             match profile {
@@ -46,7 +45,7 @@ async fn main() {
         }
         None => panic!("No profile named \"{}\"", args.profile)
     };
-    
+
     let options = CodegenOptions {
         runtime_package: config.runtime.unwrap_or_else(|| "graphql-freeze".to_string()),
         indent: config.indent.unwrap_or_else(|| "    ".to_string()),
@@ -55,7 +54,7 @@ async fn main() {
         fetch,
         process
     };
-    
+
     execute(options).await;
 }
 
@@ -141,16 +140,14 @@ async fn read_file(path: PathBuf) -> String {
 async fn read_endpoint(url: String) -> String {
     let query = include_str!("../resources/introspect.gql");
     let input_body = GraphQLQuery { query: query.to_string() };
-    let client = hyper::Client::new();
-    let input_body_content = serde_json::to_string(&input_body).unwrap();
-    let request = hyper::Request::builder()
-        .uri(url)
-        .body(hyper::Body::from(input_body_content))
-        .unwrap();
-    let response = client.request(request).await.unwrap();
-    let mut output_body = response.into_body();
-    let body_bytes = (&mut output_body).data().await.unwrap().unwrap();
-    return String::from_utf8(body_bytes.to_vec()).unwrap();
+    surf::post(url)
+        .body_json(&input_body)
+        .unwrap()
+        .await
+        .unwrap()
+        .body_string()
+        .await
+        .unwrap()
 }
 
 fn read_pipe() -> String {
