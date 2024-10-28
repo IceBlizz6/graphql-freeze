@@ -1,0 +1,3 @@
+[*.{ts,rs,json}]
+indent_style = tab
+indent_size = 4
