@@ -1,0 +1,11 @@
+{
+	"name": "graphql-freeze-codegen",
+	"version": "0.1.0",
+	"type": "module",
+	"bin": {
+		"graphql-freeze": "./bin/generate.js"
+	},
+	"scripts": {
+		"postinstall": "./install.js"
+	}
+}

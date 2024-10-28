@@ -2,3 +2,5 @@
 /runtime/node_modules/
 /runtime/dist/
 /codegen-wrapper/node_modules/
+/codegen-wrapper/dist/install.js
+/codegen-wrapper/dist/bin/generate.js
