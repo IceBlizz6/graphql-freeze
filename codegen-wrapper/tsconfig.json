@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "rootDir": "./scripts",
+        "rootDir": "./src",
         "outDir": "./dist",
         "baseUrl": ".",
         "declaration": false,
@@ -13,7 +13,7 @@
         "noUncheckedIndexedAccess": true
     },
     "include": [
-        "scripts/**/*.ts"
+        "src/**/*.ts"
     ],
     "exclude": [
         "node_modules"
