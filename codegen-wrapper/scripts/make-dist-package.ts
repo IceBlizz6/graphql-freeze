@@ -9,18 +9,18 @@ const originalPackageContent = readFileSync(join(projectFolder, "package.json"),
 const originalPackage = JSON.parse(originalPackageContent)
 
 const packageInfo = {
-    "name": originalPackage.name,
-    "version": originalPackage.version,
-    "type": "module",
-    "bin": {
-        "graphql-freeze": "./bin/generate.js"
-    },
-    "scripts": {
+	"name": originalPackage.name,
+	"version": originalPackage.version,
+	"type": "module",
+	"bin": {
+		"graphql-freeze": "./bin/generate.js"
+	},
+	"scripts": {
 		"postinstall": "./install.js"
 	}
 }
 
 writeFileSync(
-    join(projectFolder, "dist", "package.json"),
-    JSON.stringify(packageInfo, null, 2)
+	join(projectFolder, "dist", "package.json"),
+	JSON.stringify(packageInfo, null, 2)
 )

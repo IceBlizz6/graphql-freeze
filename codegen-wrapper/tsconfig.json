@@ -1,21 +1,21 @@
 {
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "baseUrl": ".",
-        "declaration": false,
-        "module": "ES2022",
-        "target": "ES2022",
-        "moduleResolution": "node",
-        "strict": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitAny": true,
-        "noUncheckedIndexedAccess": true
-    },
-    "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"baseUrl": ".",
+		"declaration": false,
+		"module": "ES2022",
+		"target": "ES2022",
+		"moduleResolution": "node",
+		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitAny": true,
+		"noUncheckedIndexedAccess": true
+	},
+	"include": [
+		"src/**/*.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
 }
