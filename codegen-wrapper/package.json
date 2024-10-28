@@ -1,9 +1,10 @@
 {
 	"name": "graphql-freeze-codegen-wrapper",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"type": "module",
 	"scripts": {
-		"build": "tsc && chmod +x dist/install.js && chmod +x dist/bin/generate.js"
+		"build": "tsc && chmod +x dist/install.js && chmod +x dist/bin/generate.js",
+		"postpublish": "chmod +x dist/install.js && chmod +x dist/bin/generate.js"
 	},
 	"dependencies": {
 		"node-fetch": "3.3.2"

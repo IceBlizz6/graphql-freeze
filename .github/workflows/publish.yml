@@ -4,6 +4,9 @@ name: Publish codegen binaries
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   build-codegen-binaries:
