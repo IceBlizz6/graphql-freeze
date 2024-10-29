@@ -290,7 +290,7 @@ fn write_codec_ts(
     runtime: &str
 ) -> String {
     let mut file = CodeFile::new(options);
-    file.line(&format!("import {{ Scalars }} from \"{}\"", "./index"));
+    file.line("import { Scalars } from \"./schema\"");
     file.line(&format!("import {{ Codec, Encoder, decodeNull, decodeList, decodeObject, encodeNull, encodeList, encodeObject }} from \"{}\"", runtime));
     file.blank_line();
 
