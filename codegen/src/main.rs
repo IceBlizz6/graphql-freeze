@@ -166,6 +166,7 @@ fn default_line_break() -> String {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct CodegenJsonConfig {
     profiles: Option<HashMap<String, ConfigProfile>>,
     output_directory: Option<String>,
@@ -176,6 +177,7 @@ struct CodegenJsonConfig {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 #[serde(tag = "method")]
 enum ConfigProfile {
     Endpoint { url: String },
