@@ -1,8 +1,10 @@
+use std::io;
 use std::io::Read;
+use std::fs;
+use std::fs::File;
+use std::process;
 use std::path::PathBuf;
 use std::collections::HashMap;
-use async_std::fs::File;
-use async_std::io::ReadExt;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use crate::schema::GqlDocument;
@@ -121,8 +123,8 @@ fn read_config_from_args(args: &Cli) -> Option<CodegenJsonConfig> {
 }
 
 fn read_config(path: &str) -> Result<Option<CodegenJsonConfig>, std::io::Error> {
-    if std::fs::exists(path)? {
-        let mut file = std::fs::File::open(path)?;
+    if fs::exists(path)? {
+        let mut file = File::open(path)?;
         let mut config_content = String::new();
         file.read_to_string(&mut config_content)?;
         let deserializer = &mut serde_json::Deserializer::from_str(&config_content);
@@ -131,7 +133,7 @@ fn read_config(path: &str) -> Result<Option<CodegenJsonConfig>, std::io::Error> 
             Err(error) => {
                 eprintln!("Error parsing config file {}", path);
                 eprintln!("{}", error.to_string());
-                std::process::exit(1)
+                process::exit(1)
             }
         }
     } else {
@@ -190,7 +192,7 @@ async fn execute(options: CodegenOptions, show_schema_on_error: bool) {
                 Err(error) => {
                     eprintln!("Networking error {}: {}", error.status(), error.status().canonical_reason());
                     eprintln!("{}", error.to_string());
-                    std::process::exit(1)
+                    process::exit(1)
                 }
             }
         },
@@ -231,7 +233,7 @@ fn abort_on_schema_parse_fail(show_schema_on_error: bool, schema_content: &str, 
     } else {
         eprintln!("Error parsing schema, use --errdump to display the attempted schema to parse");
     }
-    std::process::exit(1)
+    process::exit(1)
 }
 
 struct CodegenOptions {
@@ -254,10 +256,10 @@ enum ProcessMethod {
     Introspection
 }
 
-async fn read_file(path: PathBuf) -> Result<String, std::io::Error> {
-    let mut file = File::open(path).await?;
+async fn read_file(path: PathBuf) -> Result<String, io::Error> {
+    let mut file = File::open(path)?;
     let mut content = String::new();
-    file.read_to_string(&mut content);
+    file.read_to_string(&mut content)?;
     Ok(content)
 }
 
@@ -274,12 +276,12 @@ async fn read_endpoint(url: String) -> Result<String, surf::Error> {
 
 fn read_pipe() -> String {
     let mut buffer = String::new();
-    match std::io::stdin().read_to_string(&mut buffer) {
+    match io::stdin().read_to_string(&mut buffer) {
         Ok(_) => buffer,
         Err(error) => {
             eprintln!("Error reading from pipe");
             eprintln!("ERROR: {}", error.to_string());
-            std::process::exit(1)
+            process::exit(1)
         }
     }
 }
@@ -291,5 +293,5 @@ struct GraphQLQuery {
 
 fn exit_with_error(message: &str) -> ! {
     eprintln!("ERROR: {}", message);
-    std::process::exit(1)
+    process::exit(1)
 }

@@ -1,26 +1,30 @@
+use std::fs;
+use std::process;
+use futures::future;
 use std::io::{BufRead, Write};
+use std::io::BufReader;
+use std::fs::File;
+use std::path::PathBuf;
 use crate::schema::{Enum, GqlDocument, GqlType, Object};
 use crate::code_writer::CodeFile;
 use crate::code_writer::CodeFileOptions;
-use std::fs::File;
-use std::path::PathBuf;
 
 const EMBEDDED_HASH_PREFIX: &'static str = "// hash:";
 
 fn io_error_abort(context: &str, error: std::io::Error) -> ! {
     eprintln!("{}", context);
     eprintln!("IO error: {}", error.to_string());
-    std::process::exit(1)
+    process::exit(1)
 }
 
 pub async fn write_files(
     document: GqlDocument,
-    output_directory: std::path::PathBuf,
+    output_directory: PathBuf,
     options: CodeFileOptions,
     runtime: &str
 ) {
     if !output_directory.exists() {
-        match std::fs::create_dir(&output_directory) {
+        match fs::create_dir(&output_directory) {
             Ok(()) => (),
             Err(error) => io_error_abort(
                 &format!("Unable to create output directory {}, does the parent folder exist?", output_directory.display()),
@@ -60,11 +64,11 @@ pub async fn write_files(
         result.log("codec.ts");
     };
 
-    futures::future::join3(create_index_task, write_schema_task, write_codec_task).await;
+    future::join3(create_index_task, write_schema_task, write_codec_task).await;
 }
 
 fn write_index_ts(
-    file_path: &std::path::PathBuf,
+    file_path: &PathBuf,
     options: &CodeFileOptions,
     runtime: &str
 ) {
@@ -72,7 +76,7 @@ fn write_index_ts(
         .replace("__RUNTIME_PACKAGE__", runtime)
         .replace("\t", &options.indent)
         .replace("\n", &options.line_break);
-    let mut file = match std::fs::File::create_new(file_path) {
+    let mut file = match File::create_new(file_path) {
         Ok(file) => file,
         Err(error) => io_error_abort(
             &format!("Unable to create new file {}", file_path.display()),
@@ -88,7 +92,7 @@ fn write_index_ts(
     }
 }
 
-fn overwrite_on_diff(file_path: &std::path::PathBuf, new_content: &str, options: &CodeFileOptions) -> FileWriteResult {
+fn overwrite_on_diff(file_path: &PathBuf, new_content: &str, options: &CodeFileOptions) -> FileWriteResult {
     let new_content_hash = crc32fast::hash(new_content.as_bytes());
 
     if file_path.exists() {
@@ -101,7 +105,7 @@ fn overwrite_on_diff(file_path: &std::path::PathBuf, new_content: &str, options:
         if skip {
             FileWriteResult::NoChange
         } else {
-            let mut file = match std::fs::File::create(file_path) {
+            let mut file = match File::create(file_path) {
                 Ok(file) => file,
                 Err(error) => io_error_abort(
                     &format!("Unable to create or truncate file {}", file_path.display()),
@@ -118,7 +122,7 @@ fn overwrite_on_diff(file_path: &std::path::PathBuf, new_content: &str, options:
             FileWriteResult::Overwritten
         }
     } else {
-        let mut file = match std::fs::File::create_new(file_path) {
+        let mut file = match File::create_new(file_path) {
             Ok(file) => file,
             Err(error) => io_error_abort(
                 &format!("Unable to create file {}", file_path.display()),
@@ -137,14 +141,14 @@ fn overwrite_on_diff(file_path: &std::path::PathBuf, new_content: &str, options:
 }
 
 fn read_embedded_hash(path: &PathBuf) -> Option<u32> {
-    let file = match std::fs::File::open(path) {
+    let file = match File::open(path) {
         Ok(file) => file,
         Err(error) => io_error_abort(
             &format!("Failed while trying to open {} in order to read hash", path.display()),
             error
         )
     };
-    let mut reader = std::io::BufReader::new(&file);
+    let mut reader = BufReader::new(&file);
     let mut hash_line = String::new();
     match reader.read_line(&mut hash_line) {
         Ok(_) => (),
