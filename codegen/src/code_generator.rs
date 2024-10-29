@@ -205,8 +205,7 @@ fn write_schema_ts(
     runtime: &str
 ) -> String {
     let mut file = CodeFile::new(options);
-    file.line(&format!("import {{ Scalar }} from \"{}\"", runtime));
-    file.line(&format!("import {{ QFun, QList, QNull, QObject, QScalar, QEnum }} from \"{}\"", runtime));
+    file.line(&format!("import {{ Scalar, QFun, QList, QNull, QObject, QScalar, QEnum }} from \"{}\"", runtime));
     file.blank_line();
 
     file.begin_indent("export interface Scalars {");
