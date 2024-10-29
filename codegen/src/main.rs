@@ -71,7 +71,7 @@ async fn main() {
                         ConfigProfile::File { path } => {
                             (FetchMethod::File { path: PathBuf::from(path) }, ProcessMethod::Sdl)
                         }
-                        ConfigProfile::PipeResponse => {
+                        ConfigProfile::PipeIntrospection => {
                             (FetchMethod::Pipe, ProcessMethod::Introspection)
                         }
                         ConfigProfile::PipeSdl => {
@@ -169,6 +169,7 @@ fn default_line_break() -> String {
 #[serde(deny_unknown_fields)]
 struct CodegenJsonConfig {
     profiles: Option<HashMap<String, ConfigProfile>>,
+    #[serde(rename = "outputDirectory")]
     output_directory: Option<String>,
     #[serde(rename = "lineBreak")]
     line_break: Option<String>,
@@ -180,9 +181,13 @@ struct CodegenJsonConfig {
 #[serde(deny_unknown_fields)]
 #[serde(tag = "method")]
 enum ConfigProfile {
+    #[serde(rename = "endpoint")]
     Endpoint { url: String },
+    #[serde(rename = "file")]
     File { path: String },
-    PipeResponse,
+    #[serde(rename = "pipeIntrospection")]
+    PipeIntrospection,
+    #[serde(rename = "pipeSdl")]
     PipeSdl
 }
 
