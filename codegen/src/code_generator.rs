@@ -31,9 +31,11 @@ pub async fn write_files(
 
     let create_index_task = async {
         let path = &output_directory.join("index.ts");
-        if !path.exists() {
-             write_index_ts(&path, &options, runtime);
-             println!("index.ts - created");
+        if path.exists() {
+            println!("index.ts - already exists");
+        } else {
+            write_index_ts(&path, &options, runtime);
+            println!("index.ts - created");
         }
     };
 
