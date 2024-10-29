@@ -247,7 +247,12 @@ fn write_schema_ts(
         for input in inputs {
             file.begin_indent(&format!("{}: {{", input.name));
             for field in &input.fields {
-                file.line(&format!("{}: {}", field.name, gql_type_to_code(&field.field_type)));
+                let optional_marker = if let GqlType::Nullable(_) = field.field_type {
+                    "?"
+                } else {
+                    ""
+                };
+                file.line(&format!("{}{}: {}", field.name, optional_marker, gql_type_to_code(&field.field_type)));
             }
             file.end_indent("}");
         }
