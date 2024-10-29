@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 pub struct Object {
     pub name: String,
     pub fields: Vec<Field>
@@ -35,7 +37,7 @@ pub struct GqlDocument {
     pub inputs: Vec<Object>,
     pub outputs: Vec<Object>,
     pub enums: Vec<Enum>,
-    pub scalars: Vec<String>
+    pub scalars: BTreeSet<String>
 }
 
 pub const BUILT_IN_SCALARS: &'static [&'static str] = &[ "Int", "String", "Float", "Boolean", "ID" ];

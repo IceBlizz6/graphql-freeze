@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::fs;
 use std::process;
 use futures::future;
@@ -199,7 +200,7 @@ impl FileWriteResult {
 fn write_schema_ts(
     inputs: &Vec<Object>,
     outputs: &Vec<Object>,
-    scalars: &Vec<String>,
+    scalars: &BTreeSet<String>,
     enums: &Vec<Enum>,
     options: &CodeFileOptions,
     runtime: &str

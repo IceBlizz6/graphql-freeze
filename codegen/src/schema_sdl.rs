@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use graphql_parser::schema::ParseError;
 use graphql_parser::schema::{Document, TypeDefinition, Type, InputObjectType, ObjectType};
 use graphql_parser::schema::Definition;
@@ -24,7 +24,7 @@ struct GqlDocumentBuilder<'a> {
     input_definitions: BTreeMap<String, InputObjectType<'a, String>>,
     output_definitions: BTreeMap<String, ObjectType<'a, String>>,
     enums: BTreeMap<String, Enum>,
-    scalars: Vec<String>
+    scalars: BTreeSet<String>
 }
 
 impl<'a> GqlDocumentBuilder<'a> {
@@ -33,12 +33,12 @@ impl<'a> GqlDocumentBuilder<'a> {
             input_definitions: BTreeMap::new(),
             output_definitions: BTreeMap::new(),
             enums: BTreeMap::new(),
-            scalars: Vec::new()
+            scalars: BTreeSet::new()
         }
     }
 
     fn add_scalar(&mut self, name: &str) {
-        self.scalars.push(name.to_string());
+        self.scalars.insert(name.to_string());
     }
 
     fn add_document(&mut self, schema: Document<'a, String>) {
@@ -47,7 +47,7 @@ impl<'a> GqlDocumentBuilder<'a> {
                 Definition::TypeDefinition(definition) => {
                     match definition {
                         TypeDefinition::Scalar(definition) => {
-                            self.scalars.push(definition.name)
+                            self.scalars.insert(definition.name);
                         }
                         TypeDefinition::Object(definition) => {
                             self.output_definitions.insert(definition.name.clone(), definition);

@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use serde_json::Deserializer;
 use serde_path_to_error::deserialize;
+use std::collections::BTreeSet;
 use crate::schema;
 use crate::schema::{ GqlDocument, Argument, Object, GqlType, Enum};
 
@@ -10,12 +11,12 @@ pub fn from_response_body(response_body: &str) -> Result<GqlDocument, serde_path
     let types = response.data.schema.types;
 
     let mut enums: Vec<Enum> = Vec::new();
-    let mut scalars: Vec<String> = Vec::new();
+    let mut scalars: BTreeSet<String> = BTreeSet::new();
     let mut inputs: Vec<Object> = Vec::new();
     let mut outputs: Vec<Object> = Vec::new();
     
     for scalar in schema::BUILT_IN_SCALARS {
-        scalars.push(scalar.to_string());
+        scalars.insert(scalar.to_string());
     }
 
     for gql_type in types {
@@ -56,7 +57,7 @@ pub fn from_response_body(response_body: &str) -> Result<GqlDocument, serde_path
                 outputs.push(Object { name, fields: object_fields });
             }
             FullType::Scalar { name, .. } => {
-                scalars.push(name);
+                scalars.insert(name);
             }
             FullType::InputObject { name, input_fields, .. } => {
                 let fields = input_fields
