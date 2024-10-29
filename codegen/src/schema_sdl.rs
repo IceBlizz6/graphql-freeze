@@ -4,6 +4,7 @@ use graphql_parser::schema::{Document, TypeDefinition, Type, InputObjectType, Ob
 use graphql_parser::schema::Definition;
 use crate::schema::{ GqlDocument, Argument, GqlType, Enum, Field, Object };
 use graphql_parser::schema::parse_schema;
+use crate::schema;
 
 pub fn from_sdl_string(sdl: &str) -> Result<GqlDocument, ParseError> {
     let schema = parse_schema(sdl)?;
@@ -11,14 +12,12 @@ pub fn from_sdl_string(sdl: &str) -> Result<GqlDocument, ParseError> {
 }
 
 fn from_parser_document(document: Document<'_, String>) -> GqlDocument {
-    GqlDocumentBuilder::new()
-        .add_scalar("Int")
-        .add_scalar("String")
-        .add_scalar("Float")
-        .add_scalar("Boolean")
-        .add_scalar("ID")
-        .add_document(document)
-        .build()
+    let mut builder = GqlDocumentBuilder::new();
+    for scalar in schema::BUILT_IN_SCALARS {
+        builder.add_scalar(scalar);
+    }
+    builder.add_document(document);
+    builder.build()
 }
 
 struct GqlDocumentBuilder<'a> {
@@ -38,12 +37,11 @@ impl<'a> GqlDocumentBuilder<'a> {
         }
     }
 
-    fn add_scalar(mut self, name: &str) -> Self {
+    fn add_scalar(&mut self, name: &str) {
         self.scalars.push(name.to_string());
-        self
     }
 
-    fn add_document(mut self, schema: Document<'a, String>) -> Self {
+    fn add_document(&mut self, schema: Document<'a, String>) {
         for definition in schema.definitions {
             match definition {
                 Definition::TypeDefinition(definition) => {
@@ -72,7 +70,6 @@ impl<'a> GqlDocumentBuilder<'a> {
                 Definition::DirectiveDefinition(_) => ()
             }
         }
-        self
     }
 
     fn build(self) -> GqlDocument {

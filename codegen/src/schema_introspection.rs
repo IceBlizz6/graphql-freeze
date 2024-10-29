@@ -13,6 +13,10 @@ pub fn from_response_body(response_body: &str) -> Result<GqlDocument, serde_path
     let mut scalars: Vec<String> = Vec::new();
     let mut inputs: Vec<Object> = Vec::new();
     let mut outputs: Vec<Object> = Vec::new();
+    
+    for scalar in schema::BUILT_IN_SCALARS {
+        scalars.push(scalar.to_string());
+    }
 
     for gql_type in types {
         match gql_type {

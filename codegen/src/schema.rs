@@ -37,3 +37,5 @@ pub struct GqlDocument {
     pub enums: Vec<Enum>,
     pub scalars: Vec<String>
 }
+
+pub const BUILT_IN_SCALARS: &'static [&'static str] = &[ "Int", "String", "Float", "Boolean", "ID" ];
