@@ -10,7 +10,7 @@ import { ExecutionResult } from "graphql"
 import { createClient } from "graphql-ws"
 
 const appScalars = createScalars({
-    ID: scalar<string, string>({
+	ID: scalar<string, string>({
 		decode: input => input,
 		encode: input => input
 	}),
