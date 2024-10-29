@@ -4,9 +4,9 @@ use serde_path_to_error::deserialize;
 use crate::schema;
 use crate::schema::{ GqlDocument, Argument, Object, GqlType, Enum};
 
-pub fn from_response_body(response_body: &str) -> GqlDocument {
+pub fn from_response_body(response_body: &str) -> Result<GqlDocument, serde_path_to_error::Error<serde_json::Error>> {
     let deserializer = &mut Deserializer::from_str(response_body);
-    let response: IntrospectionQueryResponse = deserialize(deserializer).unwrap();
+    let response: IntrospectionQueryResponse = deserialize(deserializer)?;
     let types = response.data.schema.types;
 
     let mut enums: Vec<Enum> = Vec::new();
@@ -69,7 +69,7 @@ pub fn from_response_body(response_body: &str) -> GqlDocument {
             FullType::Union { .. } => ()
         }
     }
-    GqlDocument { inputs, outputs, enums, scalars }
+    Ok(GqlDocument { inputs, outputs, enums, scalars })
 }
 
 #[derive(Deserialize)]

@@ -1,16 +1,13 @@
 use std::collections::BTreeMap;
+use graphql_parser::schema::ParseError;
 use graphql_parser::schema::{Document, TypeDefinition, Type, InputObjectType, ObjectType};
 use graphql_parser::schema::Definition;
 use crate::schema::{ GqlDocument, Argument, GqlType, Enum, Field, Object };
 use graphql_parser::schema::parse_schema;
 
-pub fn from_sdl_string(sdl: &str) -> GqlDocument {
-    let schema = schema_from_sdl(sdl);
-    from_parser_document(schema)
-}
-
-fn schema_from_sdl(sdl: &str) -> Document<'_, String> {
-    parse_schema(sdl).unwrap()
+pub fn from_sdl_string(sdl: &str) -> Result<GqlDocument, ParseError> {
+    let schema = parse_schema(sdl)?;
+    Ok(from_parser_document(schema))
 }
 
 fn from_parser_document(document: Document<'_, String>) -> GqlDocument {

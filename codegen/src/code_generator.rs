@@ -7,6 +7,12 @@ use std::path::PathBuf;
 
 const EMBEDDED_HASH_PREFIX: &'static str = "// hash:";
 
+fn io_error_abort(context: &str, error: std::io::Error) -> ! {
+    eprintln!("{}", context);
+    eprintln!("IO error: {}", error.to_string());
+    std::process::exit(1)
+}
+
 pub async fn write_files(
     document: GqlDocument,
     output_directory: std::path::PathBuf,
@@ -14,7 +20,13 @@ pub async fn write_files(
     runtime: &str
 ) {
     if !output_directory.exists() {
-        std::fs::create_dir(&output_directory).unwrap()
+        match std::fs::create_dir(&output_directory) {
+            Ok(()) => (),
+            Err(error) => io_error_abort(
+                &format!("Unable to create output directory {}, does the parent folder exist?", output_directory.display()),
+                error
+            )
+        }
     }
 
     let create_index_task = async {
@@ -58,8 +70,20 @@ fn write_index_ts(
         .replace("__RUNTIME_PACKAGE__", runtime)
         .replace("\t", &options.indent)
         .replace("\n", &options.line_break);
-    let mut file = std::fs::File::create_new(file_path).unwrap();
-    file.write_all(&template.as_bytes()).unwrap();
+    let mut file = match std::fs::File::create_new(file_path) {
+        Ok(file) => file,
+        Err(error) => io_error_abort(
+            &format!("Unable to create new file {}", file_path.display()),
+            error
+        )
+    };
+    match file.write_all(&template.as_bytes()) {
+        Ok(()) => (),
+        Err(error) => io_error_abort(
+            &format!("Unable to write to new file {}", file_path.display()),
+            error
+        )
+    }
 }
 
 fn overwrite_on_diff(file_path: &std::path::PathBuf, new_content: &str, options: &CodeFileOptions) -> FileWriteResult {
@@ -75,38 +99,79 @@ fn overwrite_on_diff(file_path: &std::path::PathBuf, new_content: &str, options:
         if skip {
             FileWriteResult::NoChange
         } else {
-            let mut file = std::fs::File::create(file_path).unwrap();
-            write_all_with_hash(&mut file, new_content, new_content_hash, &options);
+            let mut file = match std::fs::File::create(file_path) {
+                Ok(file) => file,
+                Err(error) => io_error_abort(
+                    &format!("Unable to create or truncate file {}", file_path.display()),
+                    error
+                )
+            };
+            match write_all_with_hash(&mut file, new_content, new_content_hash, &options) {
+                Ok(()) => (),
+                Err(error) => io_error_abort(
+                    &format!("Unable to write to file {}", file_path.display()),
+                    error
+                )
+            }
             FileWriteResult::Overwritten
         }
     } else {
-        let mut file = std::fs::File::create_new(file_path).unwrap();
-        write_all_with_hash(&mut file, new_content, new_content_hash, &options);
+        let mut file = match std::fs::File::create_new(file_path) {
+            Ok(file) => file,
+            Err(error) => io_error_abort(
+                &format!("Unable to create file {}", file_path.display()),
+                error
+            )
+        };
+        match write_all_with_hash(&mut file, new_content, new_content_hash, &options) {
+            Ok(()) => (),
+            Err(error) => io_error_abort(
+                &format!("Unable to write to file {}", file_path.display()),
+                error
+            )
+        }
         FileWriteResult::Created
     }
 }
 
 fn read_embedded_hash(path: &PathBuf) -> Option<u32> {
-    let file = std::fs::File::open(path).unwrap();
+    let file = match std::fs::File::open(path) {
+        Ok(file) => file,
+        Err(error) => io_error_abort(
+            &format!("Failed while trying to open {} in order to read hash", path.display()),
+            error
+        )
+    };
     let mut reader = std::io::BufReader::new(&file);
     let mut hash_line = String::new();
-    reader.read_line(&mut hash_line).unwrap();
+    match reader.read_line(&mut hash_line) {
+        Ok(_) => (),
+        Err(error) => io_error_abort(
+            &format!("Failed while trying to read first line from {}", path.display()),
+            error
+        )
+    }
 
     if hash_line.starts_with(EMBEDDED_HASH_PREFIX) {
         let offset = EMBEDDED_HASH_PREFIX.chars().count();
-        let file_hash = hash_line.get(offset..).unwrap().trim_end();
-        match file_hash.parse() {
-            Ok(hash) => Some(hash),
-            Err(_) => None
+        match hash_line.get(offset..) {
+            Some(hash_string) => {
+                let file_hash = hash_string.trim_end();
+                match file_hash.parse() {
+                    Ok(hash) => Some(hash),
+                    Err(_) => None
+                }
+            }
+            None => None
         }
     } else {
         None
     }
 }
 
-fn write_all_with_hash(file: &mut File, new_content: &str, hash: u32, options: &CodeFileOptions) {
+fn write_all_with_hash(file: &mut File, new_content: &str, hash: u32, options: &CodeFileOptions) -> Result<(), std::io::Error> {
     let content_with_hash = format!("{}{}{}{}", EMBEDDED_HASH_PREFIX, hash, options.line_break, new_content);
-    file.write_all(content_with_hash.as_bytes()).unwrap();
+    file.write_all(content_with_hash.as_bytes())
 }
 
 enum FileWriteResult {

@@ -49,7 +49,7 @@ async fn main() {
     } else if let Some(output_dir) = &config.as_ref().and_then(|c| c.output_directory.as_ref()) {
         output_dir.to_string()
     } else {
-        panic!("No output directory was given")
+        exit_with_error("No output directory was given")
     };
 
     let (fetch, process): (FetchMethod, ProcessMethod) = if let Some(url) = args.url {
@@ -77,13 +77,13 @@ async fn main() {
                         }
                     }
                 }
-                None => panic!("No profile named \"{}\"", profile_name)
+                None => exit_with_error(&format!("No profile named \"{}\"", profile_name))
             }
         } else {
-            panic!("No method to fetch schema was provided and default profile is not defined in config file")
+            exit_with_error("No method to fetch schema was provided and default profile is not defined in config file")
         }
     } else {
-        panic!("No method to fetch schema was provided")
+        exit_with_error("No method to fetch schema was provided, use --url, --file or make a config")
     };
 
     let options = CodegenOptions {
@@ -95,30 +95,47 @@ async fn main() {
         process
     };
 
-    execute(options).await;
+    execute(options, args.dump_on_parse_error).await;
 }
 
 fn read_config_from_args(args: &Cli) -> Option<CodegenJsonConfig> {
     match &args.config {
         Some(path) => {
             match read_config(path) {
-                Some(config) => Some(config),
-                None => panic!("Unable to locate config file {}", path)
+                Ok(config) => {
+                    match config {
+                        Some(config) => Some(config),
+                        None => exit_with_error(&format!("Unable to locate config file {}", path))
+                    }
+                }
+                Err(error) => exit_with_error(&error.to_string())
             }
         },
-        None => read_config(DEFAULT_CONFIG_PATH)
+        None => {
+            match read_config(DEFAULT_CONFIG_PATH) {
+                Ok(config) => config,
+                Err(error) => exit_with_error(&error.to_string())
+            }
+        }
     }
 }
 
-fn read_config(path: &str) -> Option<CodegenJsonConfig> {
-    if std::fs::exists(path).unwrap() {
-        let mut file = std::fs::File::open(path).unwrap();
+fn read_config(path: &str) -> Result<Option<CodegenJsonConfig>, std::io::Error> {
+    if std::fs::exists(path)? {
+        let mut file = std::fs::File::open(path)?;
         let mut config_content = String::new();
-        file.read_to_string(&mut config_content).unwrap();
+        file.read_to_string(&mut config_content)?;
         let deserializer = &mut serde_json::Deserializer::from_str(&config_content);
-        Some(serde_path_to_error::deserialize(deserializer).unwrap())
+        match serde_path_to_error::deserialize(deserializer) {
+            Ok(result) => Ok(Some(result)),
+            Err(error) => {
+                eprintln!("Error parsing config file {}", path);
+                eprintln!("{}", error.to_string());
+                std::process::exit(1)
+            }
+        }
     } else {
-        None
+        Ok(None)
     }
 }
 
@@ -134,6 +151,8 @@ struct Cli {
     file: Option<String>,
     #[arg(short, long, help = "Output directory, override config file")]
     output: Option<String>,
+    #[arg(short = 'e', long = "errdump", default_value_t = false, help = "Print out the contents to stderr on schema parse error, useful for troubleshooting")]
+    dump_on_parse_error: bool
 }
 
 fn default_line_break() -> String {
@@ -163,21 +182,56 @@ enum ConfigProfile {
     PipeSdl
 }
 
-async fn execute(options: CodegenOptions) {
+async fn execute(options: CodegenOptions, show_schema_on_error: bool) {
     let raw_content = match options.fetch {
-        FetchMethod::Endpoint { url } => read_endpoint(url).await,
-        FetchMethod::File { path } => read_file(path).await,
+        FetchMethod::Endpoint { url } => {
+            match read_endpoint(url).await {
+                Ok(response) => response,
+                Err(error) => {
+                    eprintln!("Networking error {}: {}", error.status(), error.status().canonical_reason());
+                    eprintln!("{}", error.to_string());
+                    std::process::exit(1)
+                }
+            }
+        },
+        FetchMethod::File { path } => {
+            match read_file(path).await {
+                Ok(file_content) => file_content,
+                Err(error) => exit_with_error(&error.to_string())
+            }
+        },
         FetchMethod::Pipe => read_pipe()
     };
     let document: GqlDocument = match options.process {
-        ProcessMethod::Introspection => schema_introspection::from_response_body(&raw_content),
-        ProcessMethod::Sdl => schema_sdl::from_sdl_string(&raw_content)
+        ProcessMethod::Introspection => {
+            match schema_introspection::from_response_body(&raw_content) {
+                Ok(schema) => schema,
+                Err(error) => abort_on_schema_parse_fail(show_schema_on_error, &raw_content, &error.to_string())
+            }
+        },
+        ProcessMethod::Sdl => {
+            match schema_sdl::from_sdl_string(&raw_content) {
+                Ok(schema) => schema,
+                Err(error) => abort_on_schema_parse_fail(show_schema_on_error, &raw_content, &error.to_string())
+            }
+        }
     };
     let write_options = CodeFileOptions {
         indent: options.indent,
         line_break: options.line_break
     };
     code_generator::write_files(document, options.output_directory, write_options, &options.runtime_package).await;
+}
+
+fn abort_on_schema_parse_fail(show_schema_on_error: bool, schema_content: &str, error_string: &str) -> ! {
+    eprintln!("{}", error_string);
+    if show_schema_on_error {
+        eprintln!("Error parsing schema types");
+        eprintln!("{}", schema_content);
+    } else {
+        eprintln!("Error parsing schema, use --errdump to display the attempted schema to parse");
+    }
+    std::process::exit(1)
 }
 
 struct CodegenOptions {
@@ -200,33 +254,42 @@ enum ProcessMethod {
     Introspection
 }
 
-async fn read_file(path: PathBuf) -> String {
-    let mut file = File::open(path).await.unwrap();
+async fn read_file(path: PathBuf) -> Result<String, std::io::Error> {
+    let mut file = File::open(path).await?;
     let mut content = String::new();
     file.read_to_string(&mut content);
-    content
+    Ok(content)
 }
 
-async fn read_endpoint(url: String) -> String {
+async fn read_endpoint(url: String) -> Result<String, surf::Error> {
     let query = include_str!("../resources/introspect.gql");
     let input_body = GraphQLQuery { query: query.to_string() };
-    surf::post(url)
-        .body_json(&input_body)
-        .unwrap()
-        .await
-        .unwrap()
+    let result = surf::post(url)
+        .body_json(&input_body)?
+        .await?
         .body_string()
-        .await
-        .unwrap()
+        .await?;
+    Ok(result)
 }
 
 fn read_pipe() -> String {
     let mut buffer = String::new();
-    std::io::stdin().read_to_string(&mut buffer).unwrap();
-    buffer
+    match std::io::stdin().read_to_string(&mut buffer) {
+        Ok(_) => buffer,
+        Err(error) => {
+            eprintln!("Error reading from pipe");
+            eprintln!("ERROR: {}", error.to_string());
+            std::process::exit(1)
+        }
+    }
 }
 
 #[derive(Serialize)]
 struct GraphQLQuery {
     query: String
+}
+
+fn exit_with_error(message: &str) -> ! {
+    eprintln!("ERROR: {}", message);
+    std::process::exit(1)
 }
