@@ -187,7 +187,7 @@ enum ConfigProfile {
 async fn execute(options: CodegenOptions, show_schema_on_error: bool) {
     let raw_content = match options.fetch {
         FetchMethod::Endpoint { url } => {
-            match read_endpoint(url).await {
+            match read_endpoint(&url).await {
                 Ok(response) => response,
                 Err(error) => {
                     eprintln!("Networking error {}: {}", error.status(), error.status().canonical_reason());
@@ -263,7 +263,7 @@ async fn read_file(path: PathBuf) -> Result<String, io::Error> {
     Ok(content)
 }
 
-async fn read_endpoint(url: String) -> Result<String, surf::Error> {
+async fn read_endpoint(url: &str) -> Result<String, surf::Error> {
     let query = include_str!("../resources/introspect.gql");
     let input_body = GraphQLQuery { query: query.to_string() };
     let result = surf::post(url)
