@@ -61,12 +61,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install OpenSSL (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev
-
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -75,9 +69,6 @@ jobs:
           override: true
 
       - name: Build
-        env:
-          OPENSSL_DIR: "/usr/lib/ssl"
-          PKG_CONFIG_PATH: "/usr/lib/x86_64-linux-gnu/pkgconfig"
         uses: ClementTsang/cargo-action@v0.0.3
         with:
           command: build

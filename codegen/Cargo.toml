@@ -13,3 +13,4 @@ surf = "2.3.2"
 futures = "0.3.31"
 crc32fast = "1.4.2"
 clap = { version = "4.5.20", features = ["derive"] }
+openssl-sys = { version = "0.9", features = ["vendored"] }
