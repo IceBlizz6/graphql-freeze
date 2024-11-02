@@ -64,11 +64,12 @@ jobs:
       - name: Install OpenSSL (Windows only)
         if: runner.os == 'Windows'
         run: |
-          Set-ExecutionPolicy RemoteSigned -Scope Process -Force; 
-          iex (new-object net.webclient).downloadstring('get.scoop.sh')
-          scoop install openssl
-          echo "##[set-env name=OPENSSL_DIR;]C:\Users\RunnerUser\scoop\shims"
-          echo "##[set-env name=PKG_CONFIG_PATH;]C:\Users\RunnerUser\scoop\shims\lib\pkgconfig"
+          Set-ExecutionPolicy Bypass -Scope Process -Force; 
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; 
+          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+          choco install openssl -y
+          echo "##[set-env name=OPENSSL_DIR;]C:\ProgramData\chocolatey\lib\openssl\tools\openssl"
+          echo "##[set-env name=PKG_CONFIG_PATH;]C:\ProgramData\chocolatey\lib\openssl\tools\openssl\lib\pkgconfig"
 
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
