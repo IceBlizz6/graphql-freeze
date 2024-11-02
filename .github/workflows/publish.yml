@@ -62,6 +62,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install OpenSSL via winget (Windows only)
+        if: runner.os == 'Windows'
+        run: |
+          winget install OpenSSL
+          echo "##[set-env name=OPENSSL_DIR;]C:\Program Files\OpenSSL-Win64"
+          echo "##[set-env name=PKG_CONFIG_PATH;]C:\Program Files\OpenSSL-Win64\lib\pkgconfig"
+
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
