@@ -75,6 +75,9 @@ jobs:
           override: true
 
       - name: Build
+        env:
+          OPENSSL_DIR: "/usr/lib/ssl"
+          PKG_CONFIG_PATH: "/usr/lib/x86_64-linux-gnu/pkgconfig"
         uses: ClementTsang/cargo-action@v0.0.3
         with:
           command: build
