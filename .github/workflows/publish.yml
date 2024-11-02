@@ -68,8 +68,8 @@ jobs:
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; 
           iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
           choco install openssl -y
-          echo "##[set-env name=OPENSSL_DIR;]C:\ProgramData\chocolatey\lib\openssl\tools\openssl"
-          echo "##[set-env name=PKG_CONFIG_PATH;]C:\ProgramData\chocolatey\lib\openssl\tools\openssl\lib\pkgconfig"
+          echo "OPENSSL_DIR=C:\ProgramData\chocolatey\lib\openssl\tools\openssl" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=C:\ProgramData\chocolatey\lib\openssl\tools\openssl\lib\pkgconfig" >> $GITHUB_ENV
 
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
