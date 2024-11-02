@@ -13,7 +13,6 @@ jobs:
     name: Build codegen binaries
     runs-on: ${{ matrix.build.os }}
     strategy:
-      fail-fast: false
       matrix:
         build:
           - {
@@ -62,12 +61,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install OpenSSL via winget (Windows only)
+      - name: Install OpenSSL (Windows only)
         if: runner.os == 'Windows'
         run: |
-          winget install OpenSSL
-          echo "##[set-env name=OPENSSL_DIR;]C:\Program Files\OpenSSL-Win64"
-          echo "##[set-env name=PKG_CONFIG_PATH;]C:\Program Files\OpenSSL-Win64\lib\pkgconfig"
+          Set-ExecutionPolicy RemoteSigned -Scope Process -Force; 
+          iex (new-object net.webclient).downloadstring('get.scoop.sh')
+          scoop install openssl
+          echo "##[set-env name=OPENSSL_DIR;]C:\Users\RunnerUser\scoop\shims"
+          echo "##[set-env name=PKG_CONFIG_PATH;]C:\Users\RunnerUser\scoop\shims\lib\pkgconfig"
 
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
