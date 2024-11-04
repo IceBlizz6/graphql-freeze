@@ -24,7 +24,7 @@ const packageInfo = {
 	"version": originalPackage.version,
 	"type": "module",
 	"bin": {
-		"graphql-freeze": "./bin/generate.js"
+		"graphql-freeze": "./bin/graphql-freeze"
 	},
 	"scripts": {
 		"postinstall": "./install.js"

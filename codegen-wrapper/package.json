@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"clean": "rimraf dist",
-		"build": "pnpm run clean && tsc && chmod +x dist/install.js && chmod +x dist/bin/generate.js && tsx scripts/make-dist-package.ts"
+		"build": "pnpm run clean && tsc && chmod +x dist/install.js && tsx scripts/make-dist-package.ts"
 	},
 	"dependencies": {
 		"node-fetch": "3.3.2"

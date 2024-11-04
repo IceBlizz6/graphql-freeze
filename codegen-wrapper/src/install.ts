@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fetch from "node-fetch"
 import { fileURLToPath } from "url"
-import { readFileSync, createWriteStream, chmodSync, mkdirSync, MakeDirectoryOptions, existsSync } from "fs"
+import { readFileSync, createWriteStream, chmodSync, mkdirSync, existsSync } from "fs"
 import { dirname, join } from "path"
 
 const arch = process.arch
@@ -40,7 +40,12 @@ function unsupported(): never {
 }
 
 function getBinaryDestination() {
-	const base = join(packageDirectory, "bin", "graphql-freeze")
+	const binFolder = join(packageDirectory, "bin")
+	if (!existsSync(binFolder)) {
+		mkdirSync(binFolder)
+	}
+
+	const base = join(binFolder, "graphql-freeze")
 	if (platform === "win32") {
 		return `${base}.exe`
 	} else {
