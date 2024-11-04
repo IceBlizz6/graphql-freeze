@@ -21,7 +21,7 @@ const DEFAULT_RUNTIME: &'static str = "graphql-freeze";
 const DEFAULT_INDENT: &'static str = "    ";
 const DEFAULT_PROFILE_NAME: &'static str = "default";
 
-#[async_std::main]
+#[tokio::main]
 async fn main() {
     let args = Cli::parse();
     let config = read_config_from_args(&args);
@@ -197,8 +197,7 @@ async fn execute(options: CodegenOptions, show_schema_on_error: bool) {
             match read_endpoint(&url).await {
                 Ok(response) => response,
                 Err(error) => {
-                    eprintln!("Networking error {}: {}", error.status(), error.status().canonical_reason());
-                    eprintln!("{}", error.to_string());
+                    eprintln!("Networking error {}", error.to_string());
                     process::exit(1)
                 }
             }
@@ -270,15 +269,18 @@ async fn read_file(path: PathBuf) -> Result<String, io::Error> {
     Ok(content)
 }
 
-async fn read_endpoint(url: &str) -> Result<String, surf::Error> {
+async fn read_endpoint(url: &str) -> Result<String, reqwest::Error> {
     let query = include_str!("../resources/introspect.gql");
     let input_body = GraphQLQuery { query: query.to_string() };
-    let result = surf::post(url)
-        .body_json(&input_body)?
-        .await?
-        .body_string()
-        .await?;
-    Ok(result)
+    let client = reqwest::Client::new();
+    let response = client
+            .post(url)
+            .json(&input_body)
+            .send()
+            .await?
+            .error_for_status()?;
+    let response_body = response.text().await?;
+    Ok(response_body)
 }
 
 fn read_pipe() -> String {
