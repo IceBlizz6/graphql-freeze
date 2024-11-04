@@ -8,7 +8,7 @@ on:
 jobs:
   build-codegen-binaries:
     name: Build codegen binaries
-    runs-on: ${{ matrix.build.os }}
+    runs-on: ${{ matrix.build.OS }}
     strategy:
       matrix:
         build:
