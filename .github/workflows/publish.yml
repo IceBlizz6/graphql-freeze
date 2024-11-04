@@ -3,9 +3,7 @@
 name: Publish codegen binaries
 
 on:
-  push:
-    tags:
-      - "[0-9]+.[0-9]+.*"
+  workflow_dispatch:
 
 jobs:
   build-codegen-binaries:
