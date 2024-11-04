@@ -29,6 +29,11 @@ const packageInfo = {
 	"scripts": {
 		"postinstall": "./install.js"
 	},
+	"publishConfig": {
+		"executableFiles": [
+			"./install.js"
+		],
+	},
 	"binary-version": codegenVersion
 }
 
