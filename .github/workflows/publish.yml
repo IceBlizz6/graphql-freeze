@@ -92,6 +92,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Extract version
+        id: extract_version
+        working-directory: codegen
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | awk -F ' ' '{print $3}' | tr -d '"')
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
       - name: Download binaries
         uses: actions/download-artifact@v4
         with:
@@ -101,4 +108,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: ./binaries/**
+          tag: ${{ env.VERSION }}
           token: ${{ secrets.GITHUB_TOKEN }}
