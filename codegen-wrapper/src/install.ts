@@ -11,7 +11,7 @@ const installScriptLocation = fileURLToPath(import.meta.url)
 const packageDirectory = dirname(installScriptLocation)
 const packageFilePath = join(packageDirectory, "package.json")
 const packageInfo = JSON.parse(readFileSync(packageFilePath, "utf8"))
-const version = packageInfo.version
+const version = packageInfo["binary-version"]
 
 function getExecutableName(): string {
 	switch (arch) {
@@ -49,7 +49,7 @@ function getBinaryDestination() {
 }
 
 const fileName = getExecutableName()
-const url = `https://github.com/IceBlizz6/graphql-freeze/releases/download/v${version}/${fileName}`
+const url = `https://github.com/IceBlizz6/graphql-freeze/releases/download/${version}/${fileName}`
 const response = await fetch(url)
 const binaryDestination = getBinaryDestination()
 
