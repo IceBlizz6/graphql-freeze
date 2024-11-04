@@ -84,6 +84,7 @@ export function encodeList<Encoded, Decoded>(value: unknown, encode: (_: Decoded
 export function encodeObject(value: unknown, encoder: Encoder): { [name: string]: unknown } {
     if (value !== null && typeof value === "object") {
         return Object.entries(value)
+            .filter(([_, fieldValue]) => fieldValue !== undefined)
             .map(([fieldName, fieldValue]) => {
                 const encodeField = encoder[fieldName]
                 if (encodeField === undefined) {
