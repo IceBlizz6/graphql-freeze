@@ -40,4 +40,4 @@ pub struct GqlDocument {
     pub scalars: BTreeSet<String>
 }
 
-pub const BUILT_IN_SCALARS: &'static [&'static str] = &[ "Int", "String", "Float", "Boolean", "ID" ];
+pub const BUILT_IN_SCALARS: &[&str] = &[ "Int", "String", "Float", "Boolean", "ID" ];

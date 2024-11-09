@@ -12,7 +12,7 @@ pub struct CodeFile {
 
 impl CodeFile {
     pub fn new(options: &CodeFileOptions) -> CodeFile {
-        return CodeFile {
+        CodeFile {
             line_break: options.line_break.to_string(),
             indent_sign: options.indent.to_string(),
             indent_level: 0,
@@ -53,7 +53,7 @@ impl CodeFile {
         self.line(code);
     }
 
-    pub fn to_string(self) -> String {
-        return self.content;
+    pub fn build_string(self) -> String {
+        self.content
     }
 }

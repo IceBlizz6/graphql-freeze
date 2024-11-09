@@ -10,11 +10,11 @@ use crate::schema::{Enum, GqlDocument, GqlType, Object};
 use crate::code_writer::CodeFile;
 use crate::code_writer::CodeFileOptions;
 
-const EMBEDDED_HASH_PREFIX: &'static str = "// hash:";
+const EMBEDDED_HASH_PREFIX: &str = "// hash:";
 
 fn io_error_abort(context: &str, error: std::io::Error) -> ! {
     eprintln!("{}", context);
-    eprintln!("IO error: {}", error.to_string());
+    eprintln!("IO error: {}", error);
     process::exit(1)
 }
 
@@ -39,7 +39,7 @@ pub async fn write_files(
         if path.exists() {
             println!("index.ts - already exists");
         } else {
-            write_index_ts(&path, &options, runtime);
+            write_index_ts(path, &options, runtime);
             println!("index.ts - created");
         }
     };
@@ -51,7 +51,7 @@ pub async fn write_files(
             &document.scalars,
             &document.enums,
             &options,
-            &runtime
+            runtime
         );
         let path = &output_directory.join("schema.ts");
         let result = overwrite_on_diff(path, &content, &options);
@@ -84,7 +84,7 @@ fn write_index_ts(
             error
         )
     };
-    match file.write_all(&template.as_bytes()) {
+    match file.write_all(template.as_bytes()) {
         Ok(()) => (),
         Err(error) => io_error_abort(
             &format!("Unable to write to new file {}", file_path.display()),
@@ -113,7 +113,7 @@ fn overwrite_on_diff(file_path: &PathBuf, new_content: &str, options: &CodeFileO
                     error
                 )
             };
-            match write_all_with_hash(&mut file, new_content, new_content_hash, &options) {
+            match write_all_with_hash(&mut file, new_content, new_content_hash, options) {
                 Ok(()) => (),
                 Err(error) => io_error_abort(
                     &format!("Unable to write to file {}", file_path.display()),
@@ -130,7 +130,7 @@ fn overwrite_on_diff(file_path: &PathBuf, new_content: &str, options: &CodeFileO
                 error
             )
         };
-        match write_all_with_hash(&mut file, new_content, new_content_hash, &options) {
+        match write_all_with_hash(&mut file, new_content, new_content_hash, options) {
             Ok(()) => (),
             Err(error) => io_error_abort(
                 &format!("Unable to write to file {}", file_path.display()),
@@ -258,7 +258,7 @@ fn write_schema_ts(
         }
         file.end_indent("}");
     }
-    file.to_string()
+    file.build_string()
 }
 
 fn gql_type_to_code(gql_type: &GqlType) -> String {
@@ -273,9 +273,9 @@ fn gql_type_to_code(gql_type: &GqlType) -> String {
                 let name = arg.name.clone();
                 let gql_type = &arg.argument_type;
                 if let GqlType::Nullable(_) = gql_type {
-                    format!("{}?: {}", name, gql_type_to_code(&gql_type))
+                    format!("{}?: {}", name, gql_type_to_code(gql_type))
                 } else {
-                    format!("{}: {}", name, gql_type_to_code(&gql_type))
+                    format!("{}: {}", name, gql_type_to_code(gql_type))
                 }
             }).collect();
             format!("QFun<{{ {} }}, {}>", input_as_code.join(", "), gql_type_to_code(output))
@@ -336,7 +336,7 @@ fn write_codec_ts(
     }
 
     file.end_indent("}");
-    file.to_string()
+    file.build_string()
 }
 
 fn resolve_encoding_target(gql_type: &GqlType) -> EncodingTarget {

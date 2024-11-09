@@ -74,12 +74,12 @@ impl<'a> GqlDocumentBuilder<'a> {
 
     fn build(self) -> GqlDocument {
         let inputs = self.input_definitions
-            .iter()
-            .map(|(_, object)| self.to_input_object(object))
+            .values()
+            .map(|object| self.to_input_object(object))
             .collect();
         let outputs = self.output_definitions
-            .iter()
-            .map(|(_, object)| self.to_output_object(object))
+            .values()
+            .map(|object| self.to_output_object(object))
             .collect();
         GqlDocument {
             inputs,
@@ -132,7 +132,7 @@ impl<'a> GqlDocumentBuilder<'a> {
             .map(|field| {
                 let name = &field.name;
                 let field_type = &field.value_type;
-                Field { name: name.clone(), field_type: self.to_gql_type(&field_type, true) }
+                Field { name: name.clone(), field_type: self.to_gql_type(field_type, true) }
             })
             .collect();
         Object {
@@ -144,10 +144,10 @@ impl<'a> GqlDocumentBuilder<'a> {
     fn to_gql_type(&self, field_type: &Type<'_, String>, is_nullable: bool) -> GqlType {
         match field_type {
             Type::NonNullType(inner) => {
-                self.to_gql_type(&inner, false)
+                self.to_gql_type(inner, false)
             }
             Type::ListType(inner) => {
-                let inner_type = self.to_gql_type(&inner, true);
+                let inner_type = self.to_gql_type(inner, true);
                 if is_nullable {
                     GqlType::Nullable(Box::new(GqlType::List(Box::new(inner_type))))
                 } else {
@@ -159,9 +159,7 @@ impl<'a> GqlDocumentBuilder<'a> {
                     GqlType::Scalar(name.clone())
                 } else if self.enums.contains_key(name) {
                     GqlType::Enum(name.clone())
-                } else if self.input_definitions.contains_key(name) {
-                    GqlType::Object(name.clone())
-                } else if self.output_definitions.contains_key(name) {
+                } else if self.input_definitions.contains_key(name) || self.output_definitions.contains_key(name) {
                     GqlType::Object(name.clone())
                 } else {
                     panic!("Unknown type {}", name);

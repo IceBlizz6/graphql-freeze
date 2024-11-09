@@ -16,10 +16,10 @@ mod schema;
 mod schema_sdl;
 mod schema_introspection;
 
-const DEFAULT_CONFIG_PATH: &'static str = "graphql-freeze.json";
-const DEFAULT_RUNTIME: &'static str = "graphql-freeze";
-const DEFAULT_INDENT: &'static str = "    ";
-const DEFAULT_PROFILE_NAME: &'static str = "default";
+const DEFAULT_CONFIG_PATH: &str = "graphql-freeze.json";
+const DEFAULT_RUNTIME: &str = "graphql-freeze";
+const DEFAULT_INDENT: &str = "    ";
+const DEFAULT_PROFILE_NAME: &str = "default";
 
 #[tokio::main]
 async fn main() {
@@ -43,8 +43,8 @@ async fn main() {
     let line_break = config
         .as_ref()
         .and_then(|c| c.line_break.as_ref())
-        .map(|r| r.clone())
-        .unwrap_or_else(|| default_line_break());
+        .cloned()
+        .unwrap_or_else(default_line_break);
 
     let output_directory: String = if let Some(output) = args.output {
         output
@@ -132,7 +132,7 @@ fn read_config(path: &str) -> Result<Option<CodegenJsonConfig>, std::io::Error> 
             Ok(result) => Ok(Some(result)),
             Err(error) => {
                 eprintln!("Error parsing config file {}", path);
-                eprintln!("{}", error.to_string());
+                eprintln!("{}", error);
                 process::exit(1)
             }
         }
@@ -197,7 +197,7 @@ async fn execute(options: CodegenOptions, show_schema_on_error: bool) {
             match read_endpoint(&url).await {
                 Ok(response) => response,
                 Err(error) => {
-                    eprintln!("Networking error {}", error.to_string());
+                    eprintln!("Networking error {}", error);
                     process::exit(1)
                 }
             }
@@ -289,7 +289,7 @@ fn read_pipe() -> String {
         Ok(_) => buffer,
         Err(error) => {
             eprintln!("Error reading from pipe");
-            eprintln!("ERROR: {}", error.to_string());
+            eprintln!("ERROR: {}", error);
             process::exit(1)
         }
     }
