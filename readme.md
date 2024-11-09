@@ -202,7 +202,7 @@ graphql-freeze.json
     }
 }
 ```
-`./extract_sdl.sh | npm graphql-freeze`
+`./extract_sdl.sh | npm graphql-freeze -p prod`
 
 ### Extract type from query
 ```typescript
